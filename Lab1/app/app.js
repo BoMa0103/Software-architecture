@@ -6,7 +6,7 @@ app.get("/", (req, res) => {
     res.send(process.env.HELLO);
 });
 
-app.get("/user", (req, res) => {
+app.get("/use", (req, res) => {
     res.send({name: process.env.NAME, age: process.env.AGE});
 });
 
