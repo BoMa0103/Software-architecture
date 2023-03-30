@@ -36,7 +36,6 @@
     <script>
     // Получение всех пользователей
         async function GetClients() {
-            console.log("dsfsdf");
             // отправляет запрос и получаем ответ
             const response = await fetch("/api/clients", {
                 method: "GET",
@@ -153,7 +152,7 @@
             editLink.addEventListener("click", e => {
   
                 e.preventDefault();
-                GetClients(client._id);
+                GetClient(client._id);
             });
             linksTd.append(editLink);
   
