@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Clients list</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <h2>Clients list</h2>
+    <form name="clientForm">
+        <input type="hidden" name="id" value="0" />
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input class="form-control" name="name" />
+        </div>
+        <div class="form-group">
+            <label for="age">Age:</label>
+            <input class="form-control" name="age" />
+        </div>
+        <div class="form-group">
+            <label for="number">Number:</label>
+            <input class="form-control" name="number" />
+        </div>
+        <div class="panel-body">
+            <button type="submit" class="btn btn-sm btn-primary">Save</button>
+            <a id="reset" class="btn btn-sm btn-primary">Reset</a>
+
+        </div>
+    </form>
+    <table class="table table-condensed table-striped table-bordered">
+        <thead><tr><th>Id</th><th>name</th><th>age</th><th>number</th><th></th></tr></thead>
+        <tbody>
+        </tbody>
+    </table>
+   
+    <script>
+    // Получение всех пользователей
+        async function GetСlients() {
+            // отправляет запрос и получаем ответ
+            const response = await fetch("/api/clients", {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+            // если запрос прошел нормально
+            if (response.ok === true) {
+                // получаем данные
+                const clients = await response.json();
+                let rows = document.querySelector("tbody"); 
+                clients.forEach(client => {
+                    // добавляем полученные элементы в таблицу
+                    rows.append(row(client));
+                });
+            }
+        }
+        // Получение одного пользователя
+        async function GetСlient(id) {
+            const response = await fetch("/api/clients/" + id, {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+            if (response.ok === true) {
+                const client = await response.json();
+                const form = document.forms["clientForm"];
+                form.elements["id"].value = client._id;
+                form.elements["name"].value = client.name;
+                form.elements["age"].value = client.age;
+                form.elements["number"].value = client.number;
+            }
+        }
+        // Добавление пользователя
+        async function CreateСlient(clientName, clientAge, clientNumber) {
+  
+            const response = await fetch("api/clients", {
+                method: "POST",
+                headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: clientName,
+                    age: parseInt(clientAge, 10),
+                    number: clientNumber
+                })
+            });
+            if (response.ok === true) {
+                const client = await response.json();
+                reset();
+                document.querySelector("tbody").append(row(client));
+            }
+        }
+        // Изменение пользователя
+        async function EditClient(clientId, clientName, clientAge, clientNumber) {
+            const response = await fetch("api/clients", {
+                method: "PUT",
+                headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: clientId,
+                    name: clientName,
+                    age: parseInt(clientAge, 10),
+                    number: clientNumber
+                })
+            });
+            if (response.ok === true) {
+                const client = await response.json();
+                reset();
+                document.querySelector("tr[data-rowid='" + client._id + "']").replaceWith(row(client));
+            }
+        }
+        // Удаление пользователя
+        async function DeleteClient(id) {
+            const response = await fetch("/api/clients/" + id, {
+                method: "DELETE",
+                headers: { "Accept": "application/json" }
+            });
+            if (response.ok === true) {
+                const client = await response.json();
+                document.querySelector("tr[data-rowid='" + client._id + "']").remove();
+            }
+        }
+  
+        // сброс формы
+        function reset() {
+            const form = document.forms["clientForm"];
+            form.reset();
+            form.elements["id"].value = 0;
+        }
+        // создание строки для таблицы
+        function row(client) {
+  
+            const tr = document.createElement("tr");
+            tr.setAttribute("data-rowid", client._id);
+  
+            const idTd = document.createElement("td");
+            idTd.append(client._id);
+            tr.append(idTd);
+  
+            const nameTd = document.createElement("td");
+            nameTd.append(client.name);
+            tr.append(nameTd);
+  
+            const ageTd = document.createElement("td");
+            ageTd.append(client.age);
+            tr.append(ageTd);
+              
+            const numberTd = document.createElement("td");
+            numberTd.append(client.number);
+            tr.append(numberTd);
+
+            const linksTd = document.createElement("td");
+  
+            const editLink = document.createElement("a");
+            editLink.setAttribute("data-id", client._id);
+            editLink.setAttribute("style", "cursor:pointer;padding:15px;");
+            editLink.append("Change");
+            editLink.addEventListener("click", e => {
+  
+                e.preventDefault();
+                GetСlient(client._id);
+            });
+            linksTd.append(editLink);
+  
+            const removeLink = document.createElement("a");
+            removeLink.setAttribute("data-id", client._id);
+            removeLink.setAttribute("style", "cursor:pointer;padding:15px;");
+            removeLink.append("Delete");
+            removeLink.addEventListener("click", e => {
+  
+                e.preventDefault();
+                DeleteClient(client._id);
+            });
+  
+            linksTd.append(removeLink);
+            tr.appendChild(linksTd);
+  
+            return tr;
+        }
+        // сброс значений формы
+        document.getElementById("reset").click(function (e) {
+  
+            e.preventDefault();
+            reset();
+        })
+  
+        // отправка формы
+        document.forms["clientForm"].addEventListener("submit", e => {
+            e.preventDefault();
+            const form = document.forms["clientForm"];
+            const id = form.elements["id"].value;
+            const name = form.elements["name"].value;
+            const age = form.elements["age"].value;
+            const number = form.elements["number"].value;
+            if (id == 0)
+                CreateСlient(name, age, number);
+            else
+                EditClient(id, name, age, number);
+        });
+  
+        // загрузка пользователей
+        GetСlients();
+    </script>
+</body>
+</html>
